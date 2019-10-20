@@ -14,7 +14,16 @@ class ViewController: NSViewController {
     
     @IBAction func doSomething(sender: AnyObject) {
         print("On Snap, button clicked!")
-        setTextFieldToJsonResponse(url: "https://jsonplaceholder.typicode.com/posts")
+        
+        // Get data we care about
+        guard let deviceName = Host.current().localizedName else {
+            print("Error: couldn't get device name")
+            return
+        }
+        // Just some dummy endpoint that returns JSON
+        let url = "https://jsonplaceholder.typicode.com/posts"
+        // Pass a url and device name to the func that will make the request
+        setTextFieldToJsonResponse(url: url, deviceName: deviceName)
     }
     
     override func viewDidLoad() {
@@ -29,7 +38,11 @@ class ViewController: NSViewController {
         }
     }
 
-    fileprivate func setTextFieldToJsonResponse(url: String){
+    fileprivate func setTextFieldToJsonResponse(url: String, deviceName: String){
+        // Just printing out the device name for now since the dummy API i used
+        // won't do anything with it
+        print("Device Name is: ", deviceName)
+        
         let url = URL(string: url)!
 
         let task = URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
@@ -50,6 +63,8 @@ class ViewController: NSViewController {
                 return
             }
 
+            // The `as? [[String: Any]]` in the line below is just because the dummy API returns an array of objects.
+            // If your API returns an JSON object instead of an array just take the outer `[]` off
             guard let json = (try? JSONSerialization.jsonObject(with: content, options: JSONSerialization.ReadingOptions.mutableContainers)) as? [[String: Any]] else {
                 print("Error: Does not contain JSON")
                 return
@@ -57,6 +72,7 @@ class ViewController: NSViewController {
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
+                // Display the data in the UI -- just dumping the whole thing into a text field
                 self.datTextField.stringValue = String(describing: json)
             }
         }
